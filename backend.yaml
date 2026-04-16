@@ -3,7 +3,7 @@
   become: yes
   vars:
     login_host: db.daws.info
-  vars_prompt:
+    login_password: ExpenseApp@1
     
   tasks:
   - name: disable default nodejs
@@ -14,8 +14,11 @@
 
   - name: install nodejs
     ansible.builtin.dnf:
-      name: nodejs
+      name: "{{ item }}"
       state: present
+    loop:
+    - nodejs
+    - mysql
 
   - name: create expense user
     ansible.builtin.user:
