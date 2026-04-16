@@ -1,6 +1,10 @@
 - name: configure backend server
   hosts: backend
   become: yes
+  vars:
+    login_host: db.daws.info
+  vars_prompt:
+    
   tasks:
   - name: disable default nodejs
     ansible.builtin.command: dnf module disable nodejs -y 
@@ -37,3 +41,28 @@
     ansible.builtin.command: npm install
     args:
       chdir: /app 
+
+  - name: copy backend service
+    ansible.builtin.copy:
+      src: backend.server
+      dest: /etc/systemd/system/backend.service
+
+  - name: install python mysql dependencies
+    ansible.builtin.pip:
+      name: 
+      - PyMySQL
+      - cryptography
+      executable: pip3.9 # pip3.11 if pythonversion is 3.11
+
+  - name: import data into mysql 
+    community.mysql.mysql_db:
+      login_user: root
+      login_password: "{{ login_password }}"
+      login_host: "{{ login_host }}"
+      target: /app/schema/backend.sql 
+      state: import
+      name: all
+
+  - name: daemon reload
+    ansible.builtin.systemd_service:
+      daemon_reload: true
